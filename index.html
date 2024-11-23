@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reportes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #0078d7;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        main {
+            padding: 20px;
+        }
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 20px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        button {
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #005bb5;
+        }
+        textarea, input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .publicacion, .reporte {
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .acciones button {
+            margin: 0 5px;
+        }
+        #adminMenuButton {
+            display: block;
+            margin: 20px 0;
+        }
+        .confirmacion {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sistema de Reportes</h1>
+    </header>
+    <main>
+        <!-- Formulario de reporte para todos los usuarios -->
+        <div>
+            <h2>Hacer un Reporte</h2>
+            <form onsubmit="crearReporte(event)">
+                <input type="text" id="autorReporte" placeholder="Tu nombre" required>
+                <textarea id="contenidoReporte" rows="4" placeholder="Describe el problema..." required></textarea>
+                <button type="submit">Enviar Reporte</button>
+            </form>
+        </div>
+
+        <!-- Botón para abrir el menú de administración -->
+        <button id="adminMenuButton" onclick="abrirLogin()">Menú de Administración</button>
+
+        <!-- Inicio de sesión para el administrador -->
+        <div id="loginContainer" style="display: none;">
+            <h2>Gestión de Reportes</h2>
+            <p>Introduce la contraseña para acceder:</p>
+            <input type="password" id="passwordInput" placeholder="Contraseña">
+            <div class="confirmacion">
+                <button onclick="verificarAcceso()">Confirmar</button>
+            </div>
+        </div>
+
+        <!-- Lista de reportes (solo visible para el administrador) -->
+        <div id="listaReportes" style="display: none;">
+            <h2>Lista de Reportes</h2>
+            <div id="reportesContainer">
+                <!-- Los reportes aparecerán aquí -->
+            </div>
+        </div>
+    </main>
+    <footer>
+        <!-- Pie de página vacío o personalizado -->
+    </footer>
+
+    <script>
+        const PASSWORD_CORRECTA = "1234"; // Cambia esta contraseña
+        const reportes = []; // Lista de reportes
+
+        // Crear un nuevo reporte
+        function crearReporte(event) {
+            event.preventDefault();
+            const autor = document.getElementById('autorReporte').value.trim();
+            const contenido = document.getElementById('contenidoReporte').value.trim();
+
+            if (autor && contenido) {
+                reportes.push({ autor, contenido, estado: 'Pendiente' });
+                alert('Reporte enviado correctamente.');
+                document.getElementById('autorReporte').value = '';
+                document.getElementById('contenidoReporte').value = '';
+            } else {
+                alert('Por favor, completa todos los campos.');
+            }
+        }
+
+        // Abrir el contenedor de inicio de sesión
+        function abrirLogin() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('adminMenuButton').style.display = 'none';
+        }
+
+        // Detectar el presionar la tecla "Enter" en el campo de contraseña
+        document.getElementById('passwordInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                verificarAcceso();
+            }
+        });
+
+        // Verificar acceso del administrador
+        function verificarAcceso() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === PASSWORD_CORRECTA) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('listaReportes').style.display = 'block';
+                mostrarReportes();
+            } else {
+                alert('Contraseña incorrecta.');
+            }
+        }
+
+        // Mostrar lista de reportes para el administrador
+        function mostrarReportes() {
+            const contenedor = document.getElementById('reportesContainer');
+            contenedor.innerHTML = ''; // Limpiar el contenedor
+
+            reportes.forEach((reporte, index) => {
+                const div = document.createElement('div');
+                div.classList.add('reporte');
+                div.innerHTML = `
+                    <p><strong>Autor:</strong> ${reporte.autor}</p>
+                    <p><strong>Contenido:</strong> ${reporte.contenido}</p>
+                    <p><strong>Estado:</strong> ${reporte.estado}</p>
+                    <div class="acciones">
+                        <button onclick="aprobarReporte(${index})">Aprobar</button>
+                        <button onclick="desaprobarReporte(${index})">Desaprobar</button>
+                        <button onclick="eliminarReporte(${index})">Eliminar</button>
+                        <button onclick="iniciarChat('${reporte.autor}')">Iniciar Chat</button>
+                    </div>
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        // Aprobar un reporte
+        function aprobarReporte(index) {
+            reportes[index].estado = 'Aprobado';
+            mostrarReportes();
+        }
+
+        // Desaprobar un reporte
+        function desaprobarReporte(index) {
+            reportes[index].estado = 'Desaprobado';
+            mostrarReportes();
+        }
+
+        // Eliminar un reporte
+        function eliminarReporte(index) {
+            reportes.splice(index, 1);
+            mostrarReportes();
+        }
+
+        // Iniciar un chat con el autor (simulación)
+        function iniciarChat(autor) {
+            alert(`Iniciando chat con ${autor}...`);
+        }
+    </script>
+</body>
+</html>
